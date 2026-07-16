@@ -1,3 +1,9 @@
+## [0.1.2](https://github.com/bauer-group/CS-LinkStack/compare/v0.1.1...v0.1.2) (2026-07-16)
+
+### 🐛 Bug Fixes
+
+* **security:** restored real client IP behind the reverse proxy ([d9b80a6](https://github.com/bauer-group/CS-LinkStack/commit/d9b80a648c907fe0676eb4c1dbe1b18d9bec784f))
+
 ## [0.1.1](https://github.com/bauer-group/CS-LinkStack/compare/v0.1.0...v0.1.1) (2026-07-16)
 
 ### ♻️ Refactoring
