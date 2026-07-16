@@ -66,6 +66,13 @@ USER root
 COPY themes/vendor/       /opt/linkstack/themes/
 COPY themes/bauer-group/  /opt/linkstack/themes/bauer-group/
 
+# Real client IP behind a reverse proxy: enable Apache mod_remoteip and trust the
+# internal proxy ranges, so X-Forwarded-For is restored into REMOTE_ADDR. Without
+# this, LinkStack's login + API rate-limits (keyed on the client IP) collapse into
+# a single per-proxy bucket behind Traefik/Coolify. See conf/remoteip.conf.
+COPY conf/remoteip.conf /etc/apache2/conf.d/remoteip.conf
+RUN sed -i 's|^#LoadModule remoteip_module|LoadModule remoteip_module|' /etc/apache2/httpd.conf
+
 # Wrapper entrypoint.
 COPY rootfs/ /
 

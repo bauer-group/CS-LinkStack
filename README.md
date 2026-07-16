@@ -178,9 +178,19 @@ hochgeladene Themes bleiben erhalten.
 
 - **HTTPS** ist Pflicht: hinter dem Proxy `LINKSTACK_FORCE_HTTPS=true` (Default in
   prod) — der Entrypoint schreibt `FORCE_HTTPS` nach `/htdocs/.env`.
+- **Echte Client-IP hinter dem Proxy:** Apache `mod_remoteip` ist aktiviert und
+  vertraut den internen Proxy-Ranges, sodass `X-Forwarded-For` in `REMOTE_ADDR`
+  landet. Wichtig, weil LinkStack seinen Login-Brute-Force-Schutz (`email|ip`) und
+  das API-Rate-Limit (60/min pro IP) an der Client-IP festmacht — ohne den Fix
+  teilen sich alle Requests die Proxy-IP und die Limits kollabieren. Port 80 ist
+  nur im Docker-Netz erreichbar (kein Host-Port), daher ist `X-Forwarded-For`
+  nicht von außen fälschbar (siehe `app/linkstack/conf/remoteip.conf`).
 - Container läuft **non-root** (`apache:apache`, aus dem Upstream-Image).
 - Traefik-Variante liefert HSTS, `X-Frame-Options: SAMEORIGIN`, `nosniff`,
-  Referrer-Policy sowie eine optionale IP-Allow-List.
+  Referrer-Policy sowie eine optionale IP-Allow-List. Hinweis: die
+  `ipallowlist`-Middleware nutzt die direkte Verbindungs-IP zu Traefik (korrekt,
+  wenn Traefik am Edge steht); hinter einem zusätzlichen L4/L7-LB die
+  `ipStrategy.depth` setzen.
 - **Nach dem Setup: Default-Passwort ändern.** Der Wizard legt den Admin an;
   Upstream-Demos nennen teils `root`/`password` — nicht produktiv verwenden.
 - Keine Secrets im Repo (SQLite, `.env` ist gitignored).
