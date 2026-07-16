@@ -46,7 +46,7 @@ LABEL org.opencontainers.image.documentation="https://github.com/bauer-group/CS-
 LABEL org.opencontainers.image.description="LinkStack (self-hosted link-in-bio) - BAUER GROUP Edition with corporate theme and curated themes"
 # LinkStack itself is AGPL-3.0; this image bundles it. See NOTICE for details.
 LABEL org.opencontainers.image.licenses="AGPL-3.0-only"
-LABEL org.opencontainers.image.version="0.1.2"
+LABEL org.opencontainers.image.version="0.2.0"
 
 # Extended Labels
 LABEL org.opencontainers.image.base.name="linkstackorg/linkstack:${LINKSTACK_VERSION}"
