@@ -26,6 +26,9 @@ permissions:
   pull-requests: write
   packages: write
   security-events: write
+  attestations: write
+  id-token: write
+  actions: read
 
 jobs:
   # ============================================
