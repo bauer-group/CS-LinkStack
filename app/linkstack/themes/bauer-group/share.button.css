@@ -1,0 +1,76 @@
+/* =============================================================================
+ * BAUER GROUP — Corporate LinkStack Theme
+ * Share button + toast (original work © BAUER GROUP)
+ * Targets LinkStack's share markup (.sharebutton, .share-icon, .toastbox).
+ * ========================================================================== */
+
+.share-icon {
+  padding: 0 8px 3.5px 0;
+  vertical-align: middle;
+  width: 20px;
+  height: 20px;
+}
+
+.sharediv {
+  position: relative;
+  top: 30px;
+  right: 30px;
+  padding-bottom: 40px;
+}
+
+.toastdiv {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toastbox {
+  width: 280px;
+  padding: 10px;
+  background-color: rgba(16, 24, 32, 0.85);
+  color: #fff;
+  border-radius: var(--bg-radius, 12px);
+  position: fixed;
+  top: 105%;
+  transition: transform 0.3s linear;
+  z-index: 2;
+  text-align: center;
+}
+.toastbox.toast-tox--active { transform: translateY(-150px); }
+
+.sharebutton, sharebutton {
+  display: inline-block;
+  text-decoration: none;
+  height: 48px;
+  width: 48px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 48px;
+  letter-spacing: 0.1px;
+  border-radius: var(--bg-radius, 12px);
+  cursor: pointer;
+  color: var(--bg-text, #101820);
+  background-color: color-mix(in srgb, var(--bg-text, #101820) 8%, transparent);
+  transition: opacity .15s ease, filter .15s ease;
+}
+
+@media screen and (min-width: 600px) {
+  .sharebutton, sharebutton { width: 150px; }
+}
+
+.sharebutton:hover, sharebutton:hover { opacity: 0.85; outline: 0; }
+
+.sharebutton.sharebutton-primary {
+  color: #fff;
+  background-color: var(--bg-brand-primary, #0a3d62);
+  filter: brightness(95%);
+}
+.sharebutton.sharebutton-primary:hover,
+.sharebutton.sharebutton-primary:focus { filter: brightness(90%); }
+
+@media screen and (max-width: 600px) {
+  .sharebutton-mb { display: none; }
+  .sharebutton-img { position: relative; left: 3px; margin-left: auto; margin-right: auto; }
+}

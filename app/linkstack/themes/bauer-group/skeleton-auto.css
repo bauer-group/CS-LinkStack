@@ -1,0 +1,102 @@
+/* =============================================================================
+ * BAUER GROUP — Corporate LinkStack Theme
+ * Base layout (original work © BAUER GROUP)
+ * -----------------------------------------------------------------------------
+ * Targets LinkStack's markup contract (.container, body, a, .social-icon,
+ * .credit-*). All brand colours are CSS custom properties with neutral
+ * fallbacks — the real palette is injected via extra/custom-head.blade.php.
+ * Light/dark is driven by prefers-color-scheme.
+ * ========================================================================== */
+
+/* ── Brand tokens (neutral defaults — overridden in extra/custom-head.blade.php) */
+:root {
+  --bg-brand-primary:        #0a3d62;   /* corporate primary  (placeholder) */
+  --bg-brand-primary-hover:  #1e6091;   /* hover / active     (placeholder) */
+  --bg-brand-accent:         #e58e26;   /* accent / highlight (placeholder) */
+  --bg-radius:               12px;
+  --bg-maxwidth:             600px;
+  --bg-font: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Light mode surface tokens */
+  --bg-page:   #f4f6f8;
+  --bg-text:   #1b1b1b;
+  --bg-muted:  #5a6772;
+  --bg-scroll-track: #dbdbdb;
+  --bg-scroll-thumb: #323232;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page:   #16202a;
+    --bg-text:   #f2f5f8;
+    --bg-muted:  #9fb0bd;
+    --bg-scroll-track: #22303c;
+    --bg-scroll-thumb: #0a3d62;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ── Grid / container ─────────────────────────────────────────────────────── */
+.container {
+  position: relative;
+  width: 100%;
+  max-width: var(--bg-maxwidth);
+  text-align: center;
+  margin: 0 auto;
+  padding: 0 18px;
+}
+.column { width: 100%; }
+
+@media (min-width: 550px) {
+  .container { width: 85%; padding: 0; }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+html { font-size: 100%; }
+
+body {
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 400;
+  font-family: var(--bg-font);
+  background: var(--bg-page);
+  color: var(--bg-text);
+  margin: 0;
+  padding: 24px 0 48px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Typography ───────────────────────────────────────────────────────────── */
+h1 { margin: 0 0 16px; font-weight: 800; font-size: 26px; line-height: 1.25; letter-spacing: -0.01em; }
+@media (min-width: 550px) { h1 { font-size: 40px; } }
+p  { margin-top: 0; }
+
+/* ── Links ────────────────────────────────────────────────────────────────── */
+a { color: var(--bg-brand-primary); text-decoration: none; transition: color .15s ease, opacity .15s ease; }
+a:hover { color: var(--bg-brand-primary-hover); }
+
+/* ── Buttons (LinkStack default button markup) ────────────────────────────── */
+button, .button { margin-bottom: 1rem; border-radius: var(--bg-radius); }
+.button:hover, button:hover { opacity: .92; }
+
+/* ── Social + spacing utilities (LinkStack markup) ────────────────────────── */
+.spacing { padding: 0 10px; }
+.social-icon { font-size: 32px; padding: 10px; color: var(--bg-text); }
+.social-icon-div { padding-bottom: 30px; }
+
+.u-full-width { width: 100%; }
+.u-max-full-width { max-width: 100%; }
+
+hr { margin: 3rem 0 3.5rem; border: 0; border-top: 1px solid color-mix(in srgb, var(--bg-text) 12%, transparent); }
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+* { scrollbar-width: thin; scrollbar-color: var(--bg-scroll-thumb) var(--bg-scroll-track); }
+*::-webkit-scrollbar { width: 8px; }
+*::-webkit-scrollbar-track { background: var(--bg-scroll-track); }
+*::-webkit-scrollbar-thumb { background-color: var(--bg-scroll-thumb); border-radius: 30px; }
+
+/* ── Credit footer (LinkStack) ────────────────────────────────────────────── */
+.credit-txt { font-weight: 700; font-size: 15px; text-decoration: none; }
+.credit-txt-clr { color: var(--bg-muted) !important; }

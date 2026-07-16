@@ -1,0 +1,89 @@
+# =============================================================================
+# LinkStack — Production (Coolify)
+# =============================================================================
+# Usage: Deploy via Coolify with environment variables.
+#
+# Coolify manages Traefik routing entirely on its own — it generates routers,
+# TLS resolvers and security headers from the domain configured in the Coolify
+# dashboard. No traefik.* labels in this file: they would duplicate Coolify's
+# auto-generated routers and cause label collisions.
+#
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ COOLIFY DOMAIN CONFIGURATION                                               │
+# ├──────────────────┬─────────────────────────────────────────────────────────┤
+# │ Service          │ Coolify "Domains" Field                                 │
+# ├──────────────────┼─────────────────────────────────────────────────────────┤
+# │ linkstack        │ https://links.bauer-group.com                           │
+# └──────────────────┴─────────────────────────────────────────────────────────┘
+#
+# Data lives in the named volume ${STACK_NAME}-data (/htdocs): SQLite DB,
+# uploads, installed themes, /htdocs/.env. No separate database service.
+# =============================================================================
+
+
+### Service Templates ###
+x-linkstack-common: &linkstack-common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "50m"
+      max-file: "3"
+
+
+services:
+
+  # ── LinkStack (Apache + PHP 8.3, self-hosted link-in-bio) ──────────────────
+  linkstack:
+    <<: *linkstack-common
+    image: ghcr.io/bauer-group/cs-linkstack/linkstack:${LINKSTACK_IMAGE_TAG:-stable}
+    # Force a registry roundtrip on every redeploy so moving tags like :stable
+    # actually refresh — Compose's default `missing` policy otherwise reuses
+    # the locally cached image indefinitely once it exists.
+    pull_policy: always
+    container_name: ${STACK_NAME:-linkstack}_SERVER
+    hostname: linkstack
+    environment:
+      TZ: ${TIME_ZONE:-Etc/UTC}
+
+      # ── Apache / PHP (upstream image env) ─────────────────────────
+      SERVER_ADMIN: ${SERVICE_ADMIN_EMAIL:-info@bauer-group.com}
+      HTTP_SERVER_NAME: ${LINKSTACK_DOMAIN}
+      HTTPS_SERVER_NAME: ${LINKSTACK_DOMAIN}
+      LOG_LEVEL: ${LINKSTACK_LOG_LEVEL:-info}
+      PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-512M}
+      UPLOAD_MAX_FILESIZE: ${UPLOAD_MAX_FILESIZE:-8M}
+
+      # ── Reverse-proxy / .env bridge (Coolify terminates TLS) ──────
+      LINKSTACK_MANAGE_ENV: ${LINKSTACK_MANAGE_ENV:-true}
+      LINKSTACK_FORCE_HTTPS: ${LINKSTACK_FORCE_HTTPS:-true}
+
+      # ── Theme sync (BAUER GROUP entrypoint) ───────────────────────
+      FORCE_THEME_SYNC: ${FORCE_THEME_SYNC:-false}
+    expose:
+      - 80/tcp
+    volumes:
+      - linkstack-data:/htdocs:rw
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+    networks:
+      local:
+
+
+### Volumes ###
+volumes:
+  linkstack-data:
+    driver: local
+    name: ${STACK_NAME:-linkstack}-data
+
+
+### Networks ###
+networks:
+  local:
+    driver: bridge
+    name: ${STACK_NAME:-linkstack}
+    enable_ipv6: true

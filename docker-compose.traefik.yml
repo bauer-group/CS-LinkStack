@@ -1,0 +1,132 @@
+# =============================================================================
+# LinkStack — Production (Traefik Reverse Proxy)
+# =============================================================================
+# Usage: docker compose -f docker-compose.traefik.yml up -d
+#
+# Prerequisites:
+#   - Traefik v3 reverse proxy running on the ${PROXY_NETWORK} network
+#   - DNS record pointing to this server: ${LINKSTACK_DOMAIN}
+#
+# Features:
+#   - HTTPS via Let's Encrypt (Traefik terminates TLS, talks HTTP to :80)
+#   - HTTP → HTTPS redirect + security headers (HSTS, X-Frame-Options, nosniff)
+#   - Optional IP allow-list middleware (default: allow all)
+#   - SQLite database (stored inside the /htdocs data volume — no DB service)
+#   - Bundled corporate + curated themes, auto-synced into the volume on boot
+#   - IPv6 support
+#
+# Access:
+#   - Public page + Admin: https://${LINKSTACK_DOMAIN}  (admin at /admin)
+#
+# Data: everything lives in the named volume ${STACK_NAME}-data (/htdocs) —
+#       SQLite DB, uploads, installed themes and /htdocs/.env.
+# =============================================================================
+
+
+### Service Templates ###
+x-linkstack-common: &linkstack-common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "50m"
+      max-file: "3"
+
+
+services:
+
+  # ── LinkStack (Apache + PHP 8.3, self-hosted link-in-bio) ──────────────────
+  linkstack:
+    <<: *linkstack-common
+    image: ghcr.io/bauer-group/cs-linkstack/linkstack:${LINKSTACK_IMAGE_TAG:-stable}
+    # build:
+    #   context: ./app/linkstack
+    #   dockerfile: Dockerfile
+    #   args:
+    #     LINKSTACK_VERSION: ${LINKSTACK_VERSION:-latest}
+    container_name: ${STACK_NAME:-linkstack}_SERVER
+    hostname: linkstack
+    environment:
+      TZ: ${TIME_ZONE:-Etc/UTC}
+
+      # ── Apache / PHP (upstream image env) ─────────────────────────
+      SERVER_ADMIN: ${SERVICE_ADMIN_EMAIL:-info@bauer-group.com}
+      HTTP_SERVER_NAME: ${LINKSTACK_DOMAIN}
+      HTTPS_SERVER_NAME: ${LINKSTACK_DOMAIN}
+      LOG_LEVEL: ${LINKSTACK_LOG_LEVEL:-info}
+      PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-512M}
+      UPLOAD_MAX_FILESIZE: ${UPLOAD_MAX_FILESIZE:-8M}
+
+      # ── Reverse-proxy / .env bridge (BAUER GROUP entrypoint) ──────
+      # Behind a TLS-terminating proxy, set FORCE_HTTPS in /htdocs/.env to avoid
+      # mixed-content. Bridge is opt-in and only runs AFTER the setup wizard.
+      LINKSTACK_MANAGE_ENV: ${LINKSTACK_MANAGE_ENV:-true}
+      LINKSTACK_FORCE_HTTPS: ${LINKSTACK_FORCE_HTTPS:-true}
+
+      # ── Theme sync (BAUER GROUP entrypoint) ───────────────────────
+      FORCE_THEME_SYNC: ${FORCE_THEME_SYNC:-false}
+    expose:
+      - 80/tcp
+    volumes:
+      - linkstack-data:/htdocs:rw
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+    networks:
+      local:
+      proxy:
+    labels:
+      - "traefik.enable=true"
+
+      # ── Middleware: HTTP → HTTPS Redirect ───────────────────────────────
+      - "traefik.http.middlewares.${STACK_NAME:-linkstack}-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.${STACK_NAME:-linkstack}-redirect.redirectscheme.permanent=true"
+
+      # ── Middleware: Security Headers ────────────────────────────────────
+      - "traefik.http.middlewares.${STACK_NAME:-linkstack}-security.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.${STACK_NAME:-linkstack}-security.headers.stsIncludeSubdomains=false"
+      - "traefik.http.middlewares.${STACK_NAME:-linkstack}-security.headers.stsPreload=false"
+      - "traefik.http.middlewares.${STACK_NAME:-linkstack}-security.headers.customFrameOptionsValue=SAMEORIGIN"
+      - "traefik.http.middlewares.${STACK_NAME:-linkstack}-security.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.${STACK_NAME:-linkstack}-security.headers.referrerPolicy=strict-origin-when-cross-origin"
+
+      # ── Middleware: IP Allow-List (default: allow all) ──────────────────
+      - "traefik.http.middlewares.${STACK_NAME:-linkstack}-allow.ipallowlist.sourcerange=${IP_WHITELIST:-0.0.0.0/0,::/0}"
+
+      # ── Router: HTTP (redirect to HTTPS) ────────────────────────────────
+      - "traefik.http.routers.${STACK_NAME:-linkstack}-http.rule=Host(`${LINKSTACK_DOMAIN}`)"
+      - "traefik.http.routers.${STACK_NAME:-linkstack}-http.entrypoints=web"
+      - "traefik.http.routers.${STACK_NAME:-linkstack}-http.middlewares=${STACK_NAME:-linkstack}-redirect"
+
+      # ── Router: HTTPS (public page + admin) ─────────────────────────────
+      - "traefik.http.routers.${STACK_NAME:-linkstack}.rule=Host(`${LINKSTACK_DOMAIN}`)"
+      - "traefik.http.routers.${STACK_NAME:-linkstack}.entrypoints=web-secure"
+      - "traefik.http.routers.${STACK_NAME:-linkstack}.tls=true"
+      - "traefik.http.routers.${STACK_NAME:-linkstack}.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${STACK_NAME:-linkstack}.middlewares=${STACK_NAME:-linkstack}-security,${STACK_NAME:-linkstack}-allow"
+      - "traefik.http.routers.${STACK_NAME:-linkstack}.service=${STACK_NAME:-linkstack}"
+
+      # ── Service ─────────────────────────────────────────────────────────
+      - "traefik.http.services.${STACK_NAME:-linkstack}.loadBalancer.server.port=80"
+
+
+### Volumes ###
+volumes:
+  linkstack-data:
+    driver: local
+    name: ${STACK_NAME:-linkstack}-data
+
+
+### Networks ###
+networks:
+  local:
+    driver: bridge
+    name: ${STACK_NAME:-linkstack}
+    enable_ipv6: true
+
+  proxy:
+    name: ${PROXY_NETWORK:-EDGEPROXY}
+    external: true

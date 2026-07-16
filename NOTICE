@@ -1,0 +1,57 @@
+CS-LinkStack — Third-Party Notices
+==================================
+
+This repository ("the wrapper": Dockerfile, entrypoint, docker-compose files,
+scripts, the BAUER GROUP corporate theme, documentation and CI configuration)
+is licensed under the MIT License — see LICENSE. Copyright (c) 2026 BAUER GROUP.
+
+The Docker image produced from this repository BUNDLES third-party software that
+is licensed separately. The wrapper's MIT license does NOT relicense any of it.
+
+
+1. LinkStack (the application)
+------------------------------
+The image is built FROM the official upstream image `linkstackorg/linkstack`.
+
+    LinkStack — https://github.com/LinkStackOrg/LinkStack
+    Copyright (c) LinkStackOrg and contributors
+    License: GNU Affero General Public License v3.0 (AGPL-3.0)
+
+Because the distributed image contains LinkStack, the image as a whole is
+governed by the AGPL-3.0 (hence org.opencontainers.image.licenses="AGPL-3.0-only"
+on the image). The AGPL requires that the corresponding source of LinkStack be
+made available to users who interact with it over a network; the upstream source
+is published at the URL above. This wrapper does not modify LinkStack's source.
+
+
+2. Bundled stock themes (app/linkstack/themes/vendor/)
+------------------------------------------------------
+Curated LinkStack community themes are vendored unzipped and provenance-pinned
+in app/linkstack/themes/themes.lock.json. Each theme retains its own license as
+declared in its readme.md. Summary:
+
+    MIT:    Cloudy-Storm, Dark, Dawn, Magic-Kingdom, PaperBold, PolySleek,
+            Rainbow, Soothing
+    GPLv3:  Aurora, bean-soup, flare, galaxy, llc-vanilla, mono, polygon,
+            stargazer, sublime, winter-wonderland
+
+    Excluded on purpose: the upstream themes "SoT" and "minceraft" declare a
+    GPLv3 NON-COMMERCIAL-USE-ONLY restriction and are therefore NOT bundled in
+    this commercial deployment. Do not re-add them without a licensing review.
+
+Theme authors include JulianPrieber, the LinkStack Team, nekosheen and others.
+Several themes build on the Skeleton CSS framework (MIT,
+https://github.com/dhg/Skeleton).
+
+
+3. BAUER GROUP corporate theme (app/linkstack/themes/bauer-group/)
+------------------------------------------------------------------
+Original work © BAUER GROUP, following the LinkStack Theme V2 contract
+(https://github.com/LinkStackOrg/linkstack-default-theme). Distributed under the
+repository's MIT license unless a separate corporate license is applied.
+
+
+4. Base image runtime
+----------------------
+The upstream image is based on Alpine Linux, Apache httpd and PHP, each under its
+respective license (MIT/Apache-2.0/PHP License and others).

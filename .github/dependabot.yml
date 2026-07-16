@@ -1,0 +1,59 @@
+# =============================================================================
+# Dependabot Configuration
+# =============================================================================
+# Watches:
+#   1. GitHub Actions versions (workflows pinned to @main pull module updates)
+#   2. Image references inside docker-compose*.yml files
+#   3. Base image reference inside app/linkstack/Dockerfile (linkstackorg/linkstack)
+#
+# Image-tag updates that bump from a floating tag to a new floating tag
+# (e.g. linkstackorg/linkstack:4 → :5) surface here as PRs. Pure digest drift on
+# existing tags is handled by check-base-images.yml (daily cron).
+# =============================================================================
+
+version: 2
+updates:
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "06:30"
+      timezone: "Etc/UTC"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "dependabot"
+    commit-message:
+      prefix: "chore(ci)"
+
+  # Docker Compose images (Dependabot >= 2024-09 supports docker-compose ecosystem)
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "06:30"
+      timezone: "Etc/UTC"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "dependabot"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # LinkStack base image (linkstackorg/linkstack in app/linkstack/Dockerfile)
+  - package-ecosystem: "docker"
+    directory: "/app/linkstack"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "06:30"
+      timezone: "Etc/UTC"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "dependabot"
+    commit-message:
+      prefix: "chore(docker)"

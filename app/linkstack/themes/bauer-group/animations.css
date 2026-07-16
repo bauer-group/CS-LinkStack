@@ -1,0 +1,17 @@
+/* =============================================================================
+ * BAUER GROUP — Corporate LinkStack Theme
+ * Animations (original work © BAUER GROUP)
+ * Subtle, reduced-motion aware entrance for link buttons.
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  .button,
+  button {
+    animation: bg-fade-in 0.4s ease both;
+  }
+}
+
+@keyframes bg-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

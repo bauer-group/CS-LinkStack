@@ -1,0 +1,15 @@
+# Build context = ./app/linkstack. Keep it lean and reproducible.
+
+# Theme provenance manifest is metadata, not needed inside the image.
+themes/themes.lock.json
+
+# Never ship source archives; themes are vendored unzipped.
+**/*.zip
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+*.bak
+*.tmp

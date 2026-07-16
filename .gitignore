@@ -1,0 +1,46 @@
+# =============================================================================
+# Git Ignore Configuration
+# =============================================================================
+
+# Environment (Secrets)
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+.claude/
+*.code-workspace
+.history/
+
+# OS Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# Logs
+*.log
+logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Temporary Files
+*.tmp
+*.temp
+*.bak
+*~
+
+# Backups (created by scripts/linkstack-backup.py)
+linkstack-backup*.tar.gz
+linkstack-backup*.tar
+
+# Theme source archives — themes are vendored UNZIPPED under app/linkstack/themes/vendor/
+# (Do NOT add a bare `Themes/` rule: on case-insensitive filesystems it also
+#  matches app/linkstack/themes/ and would drop every vendored theme.)
+/Themes/
+app/linkstack/themes/**/*.zip

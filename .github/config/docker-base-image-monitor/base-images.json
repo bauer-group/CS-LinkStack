@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/bauer-group/automation-templates/main/.github/config/docker-base-image-monitor/docker-base-images.schema.json",
+  "_description": "LinkStack stack — the upstream application image is repackaged via app/linkstack/Dockerfile (themes + entrypoint). The monitor tracks the base image digest and triggers a release when it moves. Database is SQLite (no separate DB image).",
+  "images": [
+    {
+      "name": "linkstack",
+      "image": "linkstackorg/linkstack",
+      "tag": "latest",
+      "variable": "LINKSTACK_LATEST_DIGEST",
+      "description": "LinkStack app — base image for app/linkstack/Dockerfile (linkstack build). Consider pinning to a SemVer tag for reproducibility."
+    }
+  ],
+  "settings": {
+    "commit-prefix": "chore(deps)",
+    "auto-create-variables": true
+  }
+}

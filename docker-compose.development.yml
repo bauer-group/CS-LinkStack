@@ -1,0 +1,88 @@
+# =============================================================================
+# LinkStack — Development (Direct Port Access)
+# =============================================================================
+# Usage: docker compose -f docker-compose.development.yml up -d
+#
+# ⚠ Development only — no HTTPS, no reverse proxy, no security headers.
+#   Do NOT expose to the internet.
+#
+# Builds the BAUER GROUP image locally from app/linkstack/Dockerfile so theme
+# and entrypoint changes are exercised end-to-end. Database is SQLite (stored in
+# the /htdocs volume). Complete the first-run wizard at http://localhost:8080.
+#
+# Access:
+#   - Public page + Admin: http://localhost:${EXPOSED_HTTP_PORT:-8080}
+# =============================================================================
+
+
+### Service Templates ###
+x-linkstack-common: &linkstack-common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "50m"
+      max-file: "3"
+  networks:
+    local:
+
+
+services:
+
+  # ── LinkStack (local build) ────────────────────────────────────────────────
+  linkstack:
+    <<: *linkstack-common
+    # image: ghcr.io/bauer-group/cs-linkstack/linkstack:${LINKSTACK_IMAGE_TAG:-stable}
+    build:
+      # Context = the app dir (matches the CI docker-context) so the Dockerfile's
+      # `COPY themes/...` resolves to app/linkstack/themes/ and .dockerignore applies.
+      context: ./app/linkstack
+      dockerfile: Dockerfile
+      args:
+        LINKSTACK_VERSION: ${LINKSTACK_VERSION:-latest}
+    container_name: ${STACK_NAME:-linkstack}_SERVER
+    hostname: linkstack
+    environment:
+      TZ: ${TIME_ZONE:-Etc/UTC}
+
+      # ── Apache / PHP (upstream image env) ─────────────────────────
+      SERVER_ADMIN: ${SERVICE_ADMIN_EMAIL:-info@bauer-group.com}
+      HTTP_SERVER_NAME: ${LINKSTACK_DOMAIN:-localhost}
+      HTTPS_SERVER_NAME: ${LINKSTACK_DOMAIN:-localhost}
+      LOG_LEVEL: ${LINKSTACK_LOG_LEVEL:-info}
+      PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-512M}
+      UPLOAD_MAX_FILESIZE: ${UPLOAD_MAX_FILESIZE:-8M}
+
+      # ── No TLS in dev — do not force HTTPS ────────────────────────
+      LINKSTACK_MANAGE_ENV: ${LINKSTACK_MANAGE_ENV:-false}
+      LINKSTACK_FORCE_HTTPS: "false"
+
+      # ── Theme sync (BAUER GROUP entrypoint) ───────────────────────
+      FORCE_THEME_SYNC: ${FORCE_THEME_SYNC:-false}
+    expose:
+      - 80/tcp
+    ports:
+      - "${EXPOSED_HTTP_PORT:-8080}:80"
+    volumes:
+      - linkstack-data:/htdocs:rw
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+
+### Volumes ###
+volumes:
+  linkstack-data:
+    driver: local
+    name: ${STACK_NAME:-linkstack}-data
+
+
+### Networks ###
+networks:
+  local:
+    driver: bridge
+    name: ${STACK_NAME:-linkstack}
+    enable_ipv6: true
