@@ -266,3 +266,8 @@ kein eigenes Tracking bauen; sie hält nur Reihenfolge/Label/Icon. → Weniger C
 *Dieses Dokument ist ein Entscheidungs-Entwurf. Nächster Schritt: Nutzungsfrage (Kap. 12.1) und
 Stack (12.2) klären; danach entweder Option C sofort umsetzen oder Repo `CS-Bio` (Option D) nach
 CS-URLShortener-Muster aufsetzen.*
+
+> **Update:** Die Anforderung ist geklärt — **saubere Unternehmensanwendung mit OIDC-SSO und
+> API-first** zur automatisierten Datenpflege aus den Unternehmenssystemen (⇒ Option D). Das
+> konkrete Stack- und Architektur-Design dazu steht im
+> [ADR-0001: CS-Bio-Architektur](adr-0001-cs-bio-architektur.md) (empfohlener Stack: **Payload CMS**).
