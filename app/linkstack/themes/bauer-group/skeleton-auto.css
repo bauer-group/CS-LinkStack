@@ -8,30 +8,36 @@
  * Light/dark is driven by prefers-color-scheme.
  * ========================================================================== */
 
-/* ── Brand tokens (neutral defaults — overridden in extra/custom-head.blade.php) */
+/* ── BAUER GROUP brand tokens (defaults — refined in extra/custom-head.blade.php)
+   Palette: CorporateIdentity-BAUERGROUP. Orange primary + warm-gray neutrals. */
 :root {
-  --bg-brand-primary:        #0a3d62;   /* corporate primary  (placeholder) */
-  --bg-brand-primary-hover:  #1e6091;   /* hover / active     (placeholder) */
-  --bg-brand-accent:         #e58e26;   /* accent / highlight (placeholder) */
+  --bg-brand-primary:        #FF8500;   /* orange-500 — brand primary */
+  --bg-brand-primary-hover:  #EA6D00;   /* orange-600 — hover / active */
+  --bg-brand-accent:         #C2570A;   /* orange-700 — accessible accent */
+  --bg-link:                 #C2570A;   /* orange-700 — AA link text */
   --bg-radius:               12px;
   --bg-maxwidth:             600px;
-  --bg-font: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --bg-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  /* Light mode surface tokens */
-  --bg-page:   #f4f6f8;
-  --bg-text:   #1b1b1b;
-  --bg-muted:  #5a6772;
-  --bg-scroll-track: #dbdbdb;
-  --bg-scroll-thumb: #323232;
+  /* Light mode surface tokens (warm gray) */
+  --bg-page:   #F9F8F6;   /* warm-50 */
+  --bg-text:   #231F1C;   /* warm-900 */
+  --bg-muted:  #6B635C;   /* warm-600 */
+  --bg-scroll-track: #E0DBD6;  /* warm-200 */
+  --bg-scroll-thumb: #FF8500;  /* orange-500 */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-page:   #16202a;
-    --bg-text:   #f2f5f8;
-    --bg-muted:  #9fb0bd;
-    --bg-scroll-track: #22303c;
-    --bg-scroll-thumb: #0a3d62;
+    --bg-brand-primary:        #FB923C;  /* orange-400 */
+    --bg-brand-primary-hover:  #FF8500;  /* orange-500 */
+    --bg-brand-accent:         #FDBA74;  /* orange-300 */
+    --bg-link:                 #FB923C;  /* orange-400 */
+    --bg-page:   #231F1C;   /* warm-900 */
+    --bg-text:   #F9F8F6;   /* warm-50 */
+    --bg-muted:  #A69E97;   /* warm-400 */
+    --bg-scroll-track: #3A3430;  /* warm-800 */
+    --bg-scroll-thumb: #FB923C;  /* orange-400 */
   }
 }
 
@@ -74,7 +80,7 @@ h1 { margin: 0 0 16px; font-weight: 800; font-size: 26px; line-height: 1.25; let
 p  { margin-top: 0; }
 
 /* ── Links ────────────────────────────────────────────────────────────────── */
-a { color: var(--bg-brand-primary); text-decoration: none; transition: color .15s ease, opacity .15s ease; }
+a { color: var(--bg-link, var(--bg-brand-primary)); text-decoration: none; transition: color .15s ease, opacity .15s ease; }
 a:hover { color: var(--bg-brand-primary-hover); }
 
 /* ── Buttons (LinkStack default button markup) ────────────────────────────── */
@@ -89,7 +95,7 @@ button, .button { margin-bottom: 1rem; border-radius: var(--bg-radius); }
 .u-full-width { width: 100%; }
 .u-max-full-width { max-width: 100%; }
 
-hr { margin: 3rem 0 3.5rem; border: 0; border-top: 1px solid color-mix(in srgb, var(--bg-text) 12%, transparent); }
+hr { margin: 3rem 0 3.5rem; border: 0; border-top: 1px solid var(--bg-scroll-track); }
 
 /* ── Scrollbar ────────────────────────────────────────────────────────────── */
 * { scrollbar-width: thin; scrollbar-color: var(--bg-scroll-thumb) var(--bg-scroll-track); }

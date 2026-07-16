@@ -51,8 +51,8 @@
   letter-spacing: 0.1px;
   border-radius: var(--bg-radius, 12px);
   cursor: pointer;
-  color: var(--bg-text, #101820);
-  background-color: color-mix(in srgb, var(--bg-text, #101820) 8%, transparent);
+  color: var(--bg-text, #231F1C);
+  background-color: var(--bg-scroll-track, #E0DBD6);
   transition: opacity .15s ease, filter .15s ease;
 }
 

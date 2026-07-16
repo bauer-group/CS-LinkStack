@@ -44,3 +44,7 @@ linkstack-backup*.tar
 #  matches app/linkstack/themes/ and would drop every vendored theme.)
 /Themes/
 app/linkstack/themes/**/*.zip
+
+# Playwright MCP verification artifacts
+.playwright-mcp/
+*-theme-light.png

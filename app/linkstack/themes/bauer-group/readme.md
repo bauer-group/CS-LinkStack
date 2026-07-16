@@ -22,12 +22,18 @@ points in `extra/` without touching the base CSS.
 * `extra/custom-body-end.blade.php` — corporate footer (Impressum / Datenschutz).
 * `extra/custom-assets/` — corporate webfonts / images (referenced via `themeAsset()`).
 
-### Placeholders to replace before go-live
-* Brand hex values in `extra/custom-head.blade.php` (`--bg-brand-*`).
-* Corporate `.woff2` fonts in `extra/custom-assets/` (+ uncomment `@font-face`).
-* `preview.png` (16:9, ≤ 1920×1080).
-* Footer legal URLs in `extra/custom-body-end.blade.php`.
+### Branding (applied)
+* Official BAUER GROUP palette (orange `#FF8500` primary, warm-gray neutrals) in
+  `extra/custom-head.blade.php` and `skeleton-auto.css`, light + dark mode, with
+  WCAG-AA link text (`#C2570A` / `#FB923C`). Source: CorporateIdentity-BAUERGROUP.
+* System-ui font stack per CI — no webfonts required.
+* Corporate logo(s) bundled in `extra/custom-assets/` and shown in the footer.
+
+### Optional refinements
+* Replace the generated `preview.png` (16:9, ≤ 1920×1080) with a real screenshot.
+* Confirm the footer Impressum / Datenschutz URLs for the target deployment.
 
 ### Credits
 * Base layout is original work by BAUER GROUP, following the LinkStack Theme V2
   contract (https://github.com/LinkStackOrg/linkstack-default-theme).
+* Brand tokens and logo © BAUER GROUP (CorporateIdentity-BAUERGROUP).
