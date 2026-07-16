@@ -1,3 +1,9 @@
+## [0.1.1](https://github.com/bauer-group/CS-LinkStack/compare/v0.1.0...v0.1.1) (2026-07-16)
+
+### ♻️ Refactoring
+
+* **theme:** scoped theme to look-only and simplified theme sync ([266d755](https://github.com/bauer-group/CS-LinkStack/commit/266d755b981bda8183f790ac1c4f9ead4ca83d16))
+
 ## [0.1.0](https://github.com/bauer-group/CS-LinkStack/compare/v0.0.0...v0.1.0) (2026-07-16)
 
 ### 🚀 Features
