@@ -1,3 +1,9 @@
+## [0.2.0](https://github.com/bauer-group/CS-LinkStack/compare/v0.1.2...v0.2.0) (2026-07-16)
+
+### 🚀 Features
+
+* **bootstrap:** merged managed config (SMTP, credit) into /htdocs/.env ([2f89f2c](https://github.com/bauer-group/CS-LinkStack/commit/2f89f2cf38670a54a194fac1718aab3ed432ba6f))
+
 ## [0.1.2](https://github.com/bauer-group/CS-LinkStack/compare/v0.1.1...v0.1.2) (2026-07-16)
 
 ### 🐛 Bug Fixes
