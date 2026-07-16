@@ -27,13 +27,14 @@ return [
     // accent colours are applied on top via extra/custom-head.blade.php.
     'use_default_buttons' => 'true',
 
-    // Enable custom-code injection — this is how the corporate branding
-    // (fonts, colours, footer) is applied.
+    // Enable custom-code injection — this is how the corporate LOOK
+    // (fonts + brand colours) is applied. Content (footer links, credit,
+    // avatar) is NOT set here; it lives in the LinkStack admin panel.
     'enable_custom_code' => 'true',
 
     'enable_custom_head'     => 'true',   // fonts + :root brand variables
     'enable_custom_body'     => 'false',  // not used
-    'enable_custom_body_end' => 'true',   // corporate footer (Impressum/Datenschutz)
+    'enable_custom_body_end' => 'false',  // not used — footer is backend-managed
 
     // No custom icon set shipped with the corporate theme.
     'use_custom_icons' => 'false',

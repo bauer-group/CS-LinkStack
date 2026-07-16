@@ -69,22 +69,14 @@ COPY themes/bauer-group/  /opt/linkstack/themes/bauer-group/
 # Wrapper entrypoint.
 COPY rootfs/ /
 
-# Record which theme directories we manage (.bundled) and a content fingerprint
-# of the staged themes (.version). The fingerprint is a SHA-256 over every staged
-# theme file (content + path), so ANY change to the bundled themes — a new theme,
-# a bumped version, an edited CSS file — changes the marker and forces a one-time
-# re-sync on the next boot. It is deterministic and needs no CI build-arg. Staged
-# files stay world-readable so the runtime apache user can read them.
+# Record which theme directories the entrypoint manages (.bundled). On every boot
+# the entrypoint refreshes exactly these from the image into the /htdocs volume;
+# any other directory in the volume (user uploads) is left untouched. Staged files
+# stay world-readable so the runtime apache user can read them.
 RUN set -eux; \
     ls -1 /opt/linkstack/themes | grep -v -E '^\.' > /opt/linkstack/themes/.bundled; \
-    find /opt/linkstack/themes -type f ! -name '.version' ! -name '.bundled' \
-        -exec sha256sum {} + \
-      | LC_ALL=C sort \
-      | sha256sum \
-      | cut -d' ' -f1 > /opt/linkstack/themes/.version; \
     chmod +x /usr/local/bin/bauergroup-provision.sh; \
-    echo "Bundled themes:"; cat /opt/linkstack/themes/.bundled; \
-    echo "Theme fingerprint: $(cat /opt/linkstack/themes/.version)"
+    echo "Bundled themes:"; cat /opt/linkstack/themes/.bundled
 
 # Runtime user (matches upstream). The ENTRYPOINT and Apache run as apache.
 USER apache

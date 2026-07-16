@@ -102,7 +102,6 @@ Pflicht-Secrets** (SQLite; der Admin-Account entsteht im Wizard).
 | `PHP_MEMORY_LIMIT` / `UPLOAD_MAX_FILESIZE` | PHP-Tuning | `512M` / `8M` |
 | `LINKSTACK_MANAGE_ENV` | Entrypoint darf `/htdocs/.env` anpassen | `true` (prod) |
 | `LINKSTACK_FORCE_HTTPS` | Setzt `FORCE_HTTPS` hinter Proxy | `true` (prod) |
-| `FORCE_THEME_SYNC` | Erzwingt Theme-Resync beim nächsten Boot | `false` |
 | `PROXY_NETWORK` | Externes Traefik-Netz | `EDGEPROXY` |
 | `IP_WHITELIST` | Traefik IP-Allow-List (Default: alle) | `0.0.0.0/0,::/0` |
 
@@ -117,23 +116,34 @@ Pflicht-Secrets** (SQLite; der Admin-Account entsteht im Wizard).
   - `vendor/<name>-<version>/` — kuratierte Stock-Themes, unzip-vendored.
   - [`themes.lock.json`](app/linkstack/themes/themes.lock.json) — Provenienz
     (SHA-256 der Quell-Zips) für reproduzierbare Builds.
-- Beim Build werden sie nach `/opt/linkstack/themes/` kopiert; der Entrypoint
-  spiegelt sie beim Boot nach `/htdocs/themes/`. Ein Marker (`.bauer-provisioned`)
-  sorgt dafür, dass die Synchronisation nur einmal pro Image-Version läuft — ein
-  Image-Upgrade (neue `.version`) triggert automatisch einen Resync.
+- **Warum ein Sync?** Die Themes sind ins Image gebacken — aber unter
+  `/opt/linkstack/themes/`, **nicht** unter `/htdocs/themes/`, wo LinkStack sie
+  liest. `/htdocs` ist ein persistentes Volume; Docker befüllt es nur beim
+  *ersten* Anlegen aus dem Image, spätere Image-Updates würden verdeckt. Der
+  Entrypoint kopiert die gebündelten Themes daher bei **jedem Boot** ins Volume:
+  Image-verwaltete Themes werden aktualisiert, selbst hochgeladene Themes bleiben
+  unangetastet. Kein Marker, kein Schalter — deterministisch.
 
-### Corporate-Theme anpassen (Branding)
+### Corporate-Theme (Look)
 
-Alles Nötige liegt in `app/linkstack/themes/bauer-group/`:
-1. **Farben:** Platzhalter-Hex in `extra/custom-head.blade.php` (`--bg-brand-*`)
-   durch die offizielle Palette ersetzen.
-2. **Fonts:** Corporate-`.woff2` nach `extra/custom-assets/` legen und den
-   `@font-face`-Block in `extra/custom-head.blade.php` aktivieren.
-3. **Preview:** `preview.png` (16:9, ≤ 1920×1080) austauschen.
-4. **Footer:** Impressum-/Datenschutz-URLs in `extra/custom-body-end.blade.php`
-   bestätigen.
+Das Theme definiert nur das **Aussehen** (Palette + Font-Stack), in
+`app/linkstack/themes/bauer-group/`. Die BAUER GROUP Palette (Orange `#FF8500` +
+Warm-Gray, hell/dunkel, WCAG-AA Link-Text) ist in `extra/custom-head.blade.php`
+und `skeleton-auto.css` gesetzt; Font = `system-ui`-Stack (keine Webfonts). Bei
+Marken-Änderungen die Werte dort anpassen, `version` in `themes.lock.json` +
+`readme.md` erhöhen und Image neu bauen.
 
-Danach `version` in `themes.lock.json` + `readme.md` erhöhen und Image neu bauen.
+### Branding-Inhalte (im Admin-Backend, nicht im Theme)
+
+Bewusst **nicht** im Theme hartkodiert, damit sie editierbar bleiben und im Daten-
+Volume liegen:
+
+- **Avatar / Profil-Logo:** BAUER GROUP Logo als Profilbild hochladen
+  (Studio → Appearance). Pro Benutzer, im Volume gespeichert.
+- **Footer-Links** (Impressum / Datenschutz): Admin → Settings → Footer
+  (`DISPLAY_FOOTER_*`); Labels/Ziele im EnvEditor editierbar.
+- **„Powered by LinkStack"-Credit:** über `DISPLAY_CREDIT` /
+  `DISPLAY_CREDIT_FOOTER` im Admin abschalten.
 
 ### Weitere Themes hinzufügen
 
@@ -159,8 +169,8 @@ python scripts/linkstack-backup.py restore linkstack-backup-YYYYmmdd-HHMMSS.tar.
 
 **Upgrade** (Container-Weg, empfohlen statt In-App-Updater): vorher Backup ziehen,
 `LINKSTACK_VERSION`/`LINKSTACK_IMAGE_TAG` anheben, neu bauen/pullen, neu starten.
-Der geänderte `.version`-Marker löst automatisch einen Theme-Resync aus; von
-Nutzern hochgeladene Themes bleiben erhalten.
+Der Entrypoint spiegelt die gebündelten Themes beim Boot neu ein; von Nutzern
+hochgeladene Themes bleiben erhalten.
 
 ---
 

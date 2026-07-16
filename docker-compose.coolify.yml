@@ -57,9 +57,6 @@ services:
       # ── Reverse-proxy / .env bridge (Coolify terminates TLS) ──────
       LINKSTACK_MANAGE_ENV: ${LINKSTACK_MANAGE_ENV:-true}
       LINKSTACK_FORCE_HTTPS: ${LINKSTACK_FORCE_HTTPS:-true}
-
-      # ── Theme sync (BAUER GROUP entrypoint) ───────────────────────
-      FORCE_THEME_SYNC: ${FORCE_THEME_SYNC:-false}
     expose:
       - 80/tcp
     volumes:

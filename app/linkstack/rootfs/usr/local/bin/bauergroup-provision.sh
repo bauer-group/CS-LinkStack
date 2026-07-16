@@ -4,47 +4,42 @@
 # =============================================================================
 # Runs as the upstream non-root user (apache:apache) on every container boot:
 #
-#   1. Mirror bundled themes from the image-internal staging directory into the
-#      /htdocs volume (idempotent; overwrites bundled themes so image upgrades
-#      propagate, but never deletes user-uploaded themes).
-#   2. Optionally bridge reverse-proxy settings into /htdocs/.env (opt-in).
+#   1. Mirror the image's bundled themes into the /htdocs volume.
+#   2. Optionally bridge reverse-proxy (HTTPS) settings into /htdocs/.env.
 #   3. Hand off to the upstream boot process (docker-entrypoint.sh → Apache).
 #
-# The wrapper is intentionally resilient: a theme-sync problem must never stop
-# the application from booting, so it always reaches the handoff.
+# WHY step 1 exists: the bundled themes are baked into the IMAGE at build time,
+# but at /opt/linkstack/themes/ — NOT at /htdocs/themes/, where LinkStack reads
+# them. /htdocs is a persistent named volume and Docker only seeds a volume from
+# the image when it is FIRST created; on an existing volume, later image updates
+# to the bundled themes would be shadowed. So we simply copy the bundled themes
+# into the volume on every boot: image-managed themes are refreshed, user-
+# uploaded themes are left untouched. No marker, no toggle — deterministic.
+#
+# The wrapper is resilient: a theme-sync problem must never stop the app from
+# booting, so it always reaches the handoff.
 # =============================================================================
 
 set -u
 
 STAGE="/opt/linkstack/themes"
 DEST="/htdocs/themes"
-MARKER="${DEST}/.bauer-provisioned"
 APP_USER="apache"
 APP_GROUP="apache"
 
-log() { printf '[bauer-provision] %s\n' "$*"; }
+log() { printf '[bauergroup-provision] %s\n' "$*"; }
 
-# ── 1. Theme sync ────────────────────────────────────────────────────────────
+# ── 1. Theme sync (always: refresh bundled themes, preserve user uploads) ─────
 sync_themes() {
   if [ ! -d "$STAGE" ] || [ ! -f "${STAGE}/.bundled" ]; then
     log "no staged themes found; skipping theme sync"
     return 0
   fi
-
-  version="$(cat "${STAGE}/.version" 2>/dev/null || echo unknown)"
-  current="$(cat "$MARKER" 2>/dev/null || echo none)"
-
-  if [ "$current" = "$version" ] && [ "${FORCE_THEME_SYNC:-false}" != "true" ]; then
-    log "themes already provisioned for '${version}'; skipping (set FORCE_THEME_SYNC=true to force)"
-    return 0
-  fi
-
   if ! mkdir -p "$DEST" 2>/dev/null; then
-    log "WARNING: cannot create ${DEST}; skipping theme sync"
+    log "WARNING: cannot write ${DEST}; skipping theme sync"
     return 0
   fi
 
-  log "provisioning bundled themes ('${current}' -> '${version}')"
   count=0
   while IFS= read -r name; do
     [ -n "$name" ] || continue
@@ -53,22 +48,14 @@ sync_themes() {
     # cp -r (not -a) so copied files are owned by the running user (apache).
     if cp -r "${STAGE}/${name}" "${DEST}/${name}" 2>/dev/null; then
       count=$((count + 1))
+      # Best-effort ownership fix (no-op as apache; effective if run as root).
+      chown -R "${APP_USER}:${APP_GROUP}" "${DEST}/${name}" 2>/dev/null || true
     else
       log "WARNING: failed to sync theme '${name}'"
     fi
   done < "${STAGE}/.bundled"
 
-  # Best-effort ownership fix (no-op/allowed as apache; effective if run as root).
-  while IFS= read -r name; do
-    [ -n "$name" ] || continue
-    chown -R "${APP_USER}:${APP_GROUP}" "${DEST}/${name}" 2>/dev/null || true
-  done < "${STAGE}/.bundled"
-
-  if printf '%s' "$version" > "$MARKER" 2>/dev/null; then
-    log "theme provisioning complete (${count} themes synced)"
-  else
-    log "themes synced (${count}) but marker could not be written; will re-sync next boot"
-  fi
+  log "refreshed ${count} bundled themes into ${DEST} (user uploads preserved)"
 }
 
 # ── 2. Optional Laravel .env bridge (opt-in, idempotent) ─────────────────────
