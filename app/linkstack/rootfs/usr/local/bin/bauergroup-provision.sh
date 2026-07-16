@@ -5,7 +5,8 @@
 # Runs as the upstream non-root user (apache:apache) on every container boot:
 #
 #   1. Mirror the image's bundled themes into the /htdocs volume.
-#   2. Optionally bridge reverse-proxy (HTTPS) settings into /htdocs/.env.
+#   2. Optionally MERGE managed config (reverse-proxy HTTPS, "no LinkStack
+#      credit" brand policy, SMTP) into /htdocs/.env — preserving all other keys.
 #   3. Hand off to the upstream boot process (docker-entrypoint.sh → Apache).
 #
 # WHY step 1 exists: the bundled themes are baked into the IMAGE at build time,
@@ -58,35 +59,76 @@ sync_themes() {
   log "refreshed ${count} bundled themes into ${DEST} (user uploads preserved)"
 }
 
-# ── 2. Optional Laravel .env bridge (opt-in, idempotent) ─────────────────────
-# Only acts if /htdocs/.env already exists (i.e. AFTER LinkStack's setup wizard
-# created it) so it never races the first-run installer.
-set_env_kv() {  # $1=key $2=value  (edits /htdocs/.env in place)
+# ── 2. Config bootstrap — MERGE managed keys into /htdocs/.env ───────────────
+# Applies a curated set of deployment/brand defaults to LinkStack's Laravel .env
+# by editing ONLY the keys listed below, in place. Every other key (APP_KEY, the
+# admin's settings, DB config, …) is preserved byte-for-byte — this is a merge,
+# not a rewrite. Only runs when LINKSTACK_MANAGE_ENV=true and after the setup
+# wizard has created /htdocs/.env (so it never races the installer). LinkStack
+# does not cache config, so values take effect on the next request.
+
+# _write_line KEY FORMATTED_VALUE — replace the key's line in place (preserving
+# position), or append it. Uses awk so the value is never interpreted as a regex
+# or sed replacement — safe for passwords with |, &, \ etc.
+_write_line() {
   f="/htdocs/.env"; key="$1"; val="$2"
   [ -f "$f" ] || return 0
   if grep -qE "^${key}=" "$f" 2>/dev/null; then
-    sed -i "s|^${key}=.*|${key}=${val}|" "$f" 2>/dev/null || true
+    K="$key" V="$val" awk 'BEGIN{k=ENVIRON["K"];v=ENVIRON["V"]}
+      $0 ~ "^" k "=" {print k "=" v; next} {print}' "$f" > "${f}.tmp" 2>/dev/null \
+      && mv "${f}.tmp" "$f" 2>/dev/null || rm -f "${f}.tmp" 2>/dev/null
   else
-    printf '\n%s=%s\n' "$key" "$val" >> "$f" 2>/dev/null || true
+    printf '%s=%s\n' "$key" "$val" >> "$f" 2>/dev/null || true
   fi
 }
+# Booleans / simple tokens — written UNQUOTED so Laravel casts them
+# (env('X') === true). Quoting would turn true/false into truthy strings.
+set_env_raw() { _write_line "$1" "$2"; }
+# Arbitrary strings (mail host/user/password/from) — written QUOTED and escaped.
+set_env_str() {
+  v=$(printf '%s' "$2" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
+  _write_line "$1" "\"${v}\""
+}
+set_env_str_if_set() { [ -n "${2:-}" ] && set_env_str "$1" "$2"; }
 
-manage_env() {
+bootstrap_config() {
   [ "${LINKSTACK_MANAGE_ENV:-false}" = "true" ] || return 0
   if [ ! -f /htdocs/.env ]; then
     log "LINKSTACK_MANAGE_ENV=true but /htdocs/.env not present yet (pre-wizard); skipping"
     return 0
   fi
-  log "bridging managed keys into /htdocs/.env"
-  [ "${LINKSTACK_FORCE_HTTPS:-}" = "true" ] && set_env_kv FORCE_HTTPS true
-  # DB bridge — off by default; only relevant when using external MySQL/MariaDB.
+  log "bootstrapping managed keys into /htdocs/.env (merge — all other keys preserved)"
+
+  # ── Reverse proxy ──
+  [ "${LINKSTACK_FORCE_HTTPS:-}" = "true" ] && set_env_raw FORCE_HTTPS true
+
+  # ── Branding policy: hide the "Powered by LinkStack" credit on all pages ──
+  # Enforced from LINKSTACK_DISPLAY_CREDIT (default false). Set it to true to
+  # keep the LinkStack credit.
+  set_env_raw DISPLAY_CREDIT        "${LINKSTACK_DISPLAY_CREDIT:-false}"
+  set_env_raw DISPLAY_CREDIT_FOOTER "${LINKSTACK_DISPLAY_CREDIT:-false}"
+
+  # ── SMTP / mail: injected only when a host is provided (merge) ──
+  if [ -n "${LINKSTACK_SMTP_HOST:-}" ]; then
+    set_env_str    MAIL_MAILER       "${LINKSTACK_SMTP_MAILER:-smtp}"
+    set_env_str    MAIL_HOST         "${LINKSTACK_SMTP_HOST}"
+    set_env_str_if_set MAIL_PORT         "${LINKSTACK_SMTP_PORT:-}"
+    set_env_str_if_set MAIL_USERNAME     "${LINKSTACK_SMTP_USERNAME:-}"
+    set_env_str_if_set MAIL_PASSWORD     "${LINKSTACK_SMTP_PASSWORD:-}"
+    set_env_str_if_set MAIL_ENCRYPTION   "${LINKSTACK_SMTP_ENCRYPTION:-}"
+    set_env_str_if_set MAIL_FROM_ADDRESS "${LINKSTACK_SMTP_FROM_ADDRESS:-}"
+    set_env_str_if_set MAIL_FROM_NAME    "${LINKSTACK_SMTP_FROM_NAME:-}"
+    log "  applied SMTP config (host ${LINKSTACK_SMTP_HOST})"
+  fi
+
+  # ── External DB: injected only when explicitly enabled (SQLite by default) ──
   if [ "${LINKSTACK_DB_BRIDGE:-false}" = "true" ]; then
-    set_env_kv DB_CONNECTION "${DB_CONNECTION:-mysql}"
-    set_env_kv DB_HOST       "${DB_HOST:-}"
-    set_env_kv DB_PORT       "${DB_PORT:-3306}"
-    set_env_kv DB_DATABASE   "${DB_DATABASE:-}"
-    set_env_kv DB_USERNAME   "${DB_USERNAME:-}"
-    set_env_kv DB_PASSWORD   "${DB_PASSWORD:-}"
+    set_env_str    DB_CONNECTION "${DB_CONNECTION:-mysql}"
+    set_env_str_if_set DB_HOST     "${DB_HOST:-}"
+    set_env_str_if_set DB_PORT     "${DB_PORT:-}"
+    set_env_str_if_set DB_DATABASE "${DB_DATABASE:-}"
+    set_env_str_if_set DB_USERNAME "${DB_USERNAME:-}"
+    set_env_str_if_set DB_PASSWORD "${DB_PASSWORD:-}"
   fi
 }
 
@@ -110,5 +152,5 @@ handoff() {
 }
 
 sync_themes
-manage_env
+bootstrap_config
 handoff "$@"

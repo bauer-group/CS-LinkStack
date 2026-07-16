@@ -100,8 +100,10 @@ Pflicht-Secrets** (SQLite; der Admin-Account entsteht im Wizard).
 | `LINKSTACK_IMAGE_TAG` | GHCR-Image-Tag (stable/latest/SemVer) | `stable` |
 | `LINKSTACK_VERSION` | Upstream-Base-Image (Build-Arg, dev) | `latest` |
 | `PHP_MEMORY_LIMIT` / `UPLOAD_MAX_FILESIZE` | PHP-Tuning | `512M` / `8M` |
-| `LINKSTACK_MANAGE_ENV` | Entrypoint darf `/htdocs/.env` anpassen | `true` (prod) |
+| `LINKSTACK_MANAGE_ENV` | Config-Bootstrap in `/htdocs/.env` aktiv (Merge) | `true` (prod) |
 | `LINKSTACK_FORCE_HTTPS` | Setzt `FORCE_HTTPS` hinter Proxy | `true` (prod) |
+| `LINKSTACK_DISPLAY_CREDIT` | „Powered by LinkStack" anzeigen | `false` (aus) |
+| `LINKSTACK_SMTP_*` | SMTP-Bootstrap (nur wenn `_HOST` gesetzt) | — |
 | `PROXY_NETWORK` | Externes Traefik-Netz | `EDGEPROXY` |
 | `IP_WHITELIST` | Traefik IP-Allow-List (Default: alle) | `0.0.0.0/0,::/0` |
 
@@ -133,17 +135,31 @@ und `skeleton-auto.css` gesetzt; Font = `system-ui`-Stack (keine Webfonts). Bei
 Marken-Änderungen die Werte dort anpassen, `version` in `themes.lock.json` +
 `readme.md` erhöhen und Image neu bauen.
 
-### Branding-Inhalte (im Admin-Backend, nicht im Theme)
+### Config-Bootstrap (automatisch gemerged in `/htdocs/.env`)
 
-Bewusst **nicht** im Theme hartkodiert, damit sie editierbar bleiben und im Daten-
-Volume liegen:
+Bei `LINKSTACK_MANAGE_ENV=true` (prod-Default) merged der Entrypoint bei jedem Boot
+eine kuratierte Auswahl an Keys in LinkStacks `/htdocs/.env` — **nur** diese Keys,
+alle anderen (`APP_KEY`, Admin-Settings, …) bleiben unverändert. LinkStack cached
+Config nicht, die Werte greifen sofort. Verwaltet werden:
+
+- **`FORCE_HTTPS`** (hinter TLS-Proxy) — aus `LINKSTACK_FORCE_HTTPS`.
+- **„Powered by LinkStack"-Credit auf allen Seiten** — `DISPLAY_CREDIT` +
+  `DISPLAY_CREDIT_FOOTER` aus `LINKSTACK_DISPLAY_CREDIT` (Default: aus).
+- **SMTP** — `MAIL_*` aus `LINKSTACK_SMTP_*` (nur wenn `LINKSTACK_SMTP_HOST`
+  gesetzt ist; Passwörter werden korrekt escaped/gequotet).
+
+Booleans werden unquoted geschrieben (Laravel-Cast), Strings gequotet.
+`LINKSTACK_MANAGE_ENV=false` übergibt die volle Kontrolle ans Admin-Panel.
+
+### Reiner Backend-Inhalt (nicht gebacken, nicht gemerged)
+
+Bleibt im Daten-Volume und wird im Admin gesetzt (via `linkstack-backup.py`
+gesichert):
 
 - **Avatar / Profil-Logo:** BAUER GROUP Logo als Profilbild hochladen
   (Studio → Appearance). Pro Benutzer, im Volume gespeichert.
 - **Footer-Links** (Impressum / Datenschutz): Admin → Settings → Footer
   (`DISPLAY_FOOTER_*`); Labels/Ziele im EnvEditor editierbar.
-- **„Powered by LinkStack"-Credit:** über `DISPLAY_CREDIT` /
-  `DISPLAY_CREDIT_FOOTER` im Admin abschalten.
 
 ### Weitere Themes hinzufügen
 
