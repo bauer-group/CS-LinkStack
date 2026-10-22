@@ -1,3 +1,22 @@
+# Changelog
+
+All notable changes to this project are documented here. This file is maintained
+automatically by [semantic-release](https://github.com/semantic-release/semantic-release)
+on every release to `main`.
+
+## [0.2.2](https://github.com/bauer-group/CS-LinkStack/compare/v0.2.1...v0.2.2) (2026-10-22)
+
+### 🐛 Bug Fixes
+
+* **ci:** added the missing permissions block ([2ff55d5](https://github.com/bauer-group/CS-LinkStack/commit/2ff55d538093854d74378a6f50afb887032406a5))
+
+### 🔧 Maintenance
+
+* **ci:** removed issue AI summary workflow ([05ffe4f](https://github.com/bauer-group/CS-LinkStack/commit/05ffe4ff1cba1cb09b3a37364e1b7aad3582a6fc)), references [bauer-group/automation-templates#105](https://github.com/bauer-group/automation-templates/issues/105)
+* **ci:** removed redundant teams notification ([5ff2bea](https://github.com/bauer-group/CS-LinkStack/commit/5ff2bea60fa66ed2beb47376c713eac40f3624e9))
+* **deps:** update base image linkstack [skip ci] ([611fbe3](https://github.com/bauer-group/CS-LinkStack/commit/611fbe33b38fcaf5af1760dc507f86bb37d1b1e6))
+* update Dockerfile version to 0.2.1 ([3933533](https://github.com/bauer-group/CS-LinkStack/commit/3933533e5d27812e2ed2a567729627c45f951c4f))
+
 ## [0.2.1](https://github.com/bauer-group/CS-LinkStack/compare/v0.2.0...v0.2.1) (2026-07-17)
 
 ## [0.2.0](https://github.com/bauer-group/CS-LinkStack/compare/v0.1.2...v0.2.0) (2026-07-16)
