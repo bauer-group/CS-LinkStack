@@ -9,6 +9,14 @@
 # Image-tag updates that bump from a floating tag to a new floating tag
 # (e.g. linkstackorg/linkstack:4 → :5) surface here as PRs. Pure digest drift on
 # existing tags is handled by check-base-images.yml (daily cron).
+#
+# Commit prefixes decide whether a merged update is released:
+#   docker          -> fix(docker): PATCH release, the linkstack image is
+#                      rebuilt
+#   docker-compose  -> chore(deps): no release - the compose files are not
+#                      part of the image (and only reference it with an
+#                      interpolated tag, which Dependabot does not update)
+#   github-actions  -> chore(ci): no release, never auto-merged
 # =============================================================================
 
 version: 2
@@ -56,4 +64,4 @@ updates:
       - "docker"
       - "dependabot"
     commit-message:
-      prefix: "chore(docker)"
+      prefix: "fix(docker)"
