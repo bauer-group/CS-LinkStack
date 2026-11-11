@@ -5,7 +5,7 @@
     {
       "name": "linkstack",
       "image": "linkstackorg/linkstack",
-      "tag": "latest",
+      "dockerfile": "app/linkstack/Dockerfile",
       "variable": "LINKSTACK_LATEST_DIGEST",
       "description": "LinkStack app — base image for app/linkstack/Dockerfile (linkstack build). Consider pinning to a SemVer tag for reproducibility."
     }
